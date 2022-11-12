@@ -166,3 +166,8 @@ class MODE_PLAY:
 class GUI:
     DISPLAY = True
     HIDDEN = False
+
+class Equation:
+    NO_SOLUTION = 0
+    ONE_SOLUTION = 1
+    TWO_SOLUTUON = 2
