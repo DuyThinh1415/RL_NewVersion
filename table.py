@@ -293,11 +293,11 @@ class RLAlgorithm:
 
             if (e%5000 == 0 and e!=0):
                 print("Save mode -------------- ",end="")
-                file = open("D:/RL/curQtable.txt", "w")
+                file = open("curQtable.txt", "w")
                 file.write(json.dumps(self.Q))
                 file.close()
 
-                file = open("D:/RL/maxReward.txt", "w")
+                file = open("maxReward.txt", "w")
                 file.write(json.dumps(maxQ))
                 file.close()
 
@@ -315,11 +315,11 @@ class RLAlgorithm:
         print("Save Q table")
 
         outputVideo.release()
-        file = open("D:/RL/curQtable.txt", "w")
+        file = open("curQtable.txt", "w")
         file.write(json.dumps(self.Q))
         file.close()
 
-        file = open("D:/RL/maxReward.txt", "w")
+        file = open("maxReward.txt", "w")
         file.write(json.dumps(maxQ))
         file.close()
 
