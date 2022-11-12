@@ -33,20 +33,18 @@ class Utils:
             return Equation.TWO_SOLUTION, (-b + math.sqrt(delta))/(2*a), (-b - math.sqrt(delta))/(2*a)
     
     @staticmethod
-    def getDistanceFromObstacle(xCenter, yCenter, xTarget, yTarget):
-        # Center Point is center of Obstacle
-        
+    def getDistanceFromObstacle(xCenter, yCenter, xTarget, yTarget, xObstacle, yObstacle):
         # Pt đường thẳng lidar y = ax + b
         a, b = Utils.findLinePassTwoPoints(xCenter, yCenter, xTarget, yTarget)
         # Pt đường thẳng cắt hình tròn (a^2 + 1)x^2 - 2*(2*xCenter - ab + yCenter)x + (b - yCenter)**2 - RADIUS_LIDAR = 0
         a_temp = a**2 + 1
-        b_temp = -2*(a*xCenter - a*b + yCenter)
-        c_temp = (b - yCenter)**2 - PlayerParam.RADIUS_LIDAR**2
+        b_temp = -2*(a*xObstacle - a*b + yObstacle)
+        c_temp = (b - yObstacle)**2 - PlayerParam.RADIUS_LIDAR**2
         numberOfSolution, x1, x2 = Utils.findSolOfEquation(a_temp, b_temp, c_temp)
         
         if numberOfSolution == Equation.NO_SOLUTION:
             print('NO_SOLUTION')
-            return math.inf
+            return PlayerParam.INFINITY
         elif numberOfSolution == Equation.ONE_SOLUTION:
             return x1
         else:
