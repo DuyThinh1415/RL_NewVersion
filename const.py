@@ -4,11 +4,12 @@ import math
 class GameSettingParam:
     CAPTION = "Reinforcement Learning"
     WIDTH = 400
-    HEIGHT = 1500
+    HEIGHT = 700
     # HEIGHT = 1800
     FPS = 20
+    
 
-    DRAW = False
+    DRAW = True
 
 
 class PlayerParam:
@@ -21,7 +22,7 @@ class PlayerParam:
     HEIGHT = 30
 
     INITIAL_X = GameSettingParam.WIDTH//2
-    INITIAL_Y = GameSettingParam.HEIGHT
+    INITIAL_Y = GameSettingParam.HEIGHT - 100
 
     MAX_VELOCITY = 50
     MAX_ROTATION_VELOCITY = 20
@@ -42,7 +43,7 @@ class PlayerParam:
 
 
 class ObstacleParam:
-    NUMBER_OF_OBSTACLES = 10
+    NUMBER_OF_OBSTACLES = 1
     OBSTACLE_ACCELERATION_FORWARD = 0
     OBSTACLE_ACCELERATION_ROTATE = 0
     INITIAL_OBSTACLE_X = GameSettingParam.WIDTH//2
@@ -56,29 +57,29 @@ class ObstacleParam:
     # PROBABILITIES_ACTION = [0.001,0.001,0.001,0.001,0.001]
 
 class RLParam:
-    EPSILON = 0.9
+    EPSILON = 0.2
 
-    MAX_ALPHA = 0.5
-    MIN_ALPHA = 1
+    MAX_ALPHA = 0.2
+    MIN_ALPHA = 0.5
 
-    GAMMA = 0.6
+    GAMMA = 0.8
 
-    AREA_RAY_CASTING_NUMBERS = 8
+    AREA_RAY_CASTING_NUMBERS = 5
 
     N_EPISODES = 10000
     MAX_EPISODE_STEPS = 1001
 
     GO_FUCKING_DEAD = -1000000
 
-    LAND_MARK_LIST = [  1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,
-                        1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,
-                        1000,1000,1000,1000,1000,1000,1000,1000,1000,1000]
+    LAND_MARK_LIST = [400]*30
 
     # ACTIONS = [PlayerParam.INC_ROTATION_VELO,
     #            PlayerParam.DESC_ROTATION_VELO,
     #            PlayerParam.STOP,
     #            PlayerParam.INC_FORWARD_VELO,
     #            PlayerParam.DESC_FORWARD_VELO]
+
+    # 11 22 33 44 55 66 77 88
 
     ACTIONS = [PlayerParam.INC_FORWARD_VELO,
                PlayerParam.INC_ROTATION_VELO,
@@ -101,22 +102,16 @@ class RLParam:
     class LEVEL_OF_ANGLE:
         BACK = "0"
         LEFT = "1"
-        MLEFT = "2"
-        LMID = "3"
-        RMID = "4"
-        MRIGHT = "5"
-        RIGHT = "6"
+        MID = "2"
+        RIGHT = "3"
 
-        LIST_LEVEL_ANGLES = [BACK,LEFT,MLEFT,LMID,RMID,MRIGHT,RIGHT]  
+        LIST_LEVEL_ANGLES = [BACK,LEFT,MID,RIGHT]  
 
     class Y_VER:
         BACK = "0"  #BACK
-        FORD1 = "1"#0-10
-        FORD2 = "2"#10-20
-        FORD3 = "3"#20-30
-        FORD4 = "4"#30-40
-        FORD5 = "5"#40-50
-        LIST_LEVEL_YVER = [BACK,FORD1,FORD2,FORD3,FORD4,FORD5]
+        FORD1 = "1"#0-20
+        FORD2 = "2"#20-
+        LIST_LEVEL_YVER = [BACK,FORD1,FORD2]
         
     # | x | 3x | 2x | 3x | x |
     # split the middle area into 2 parts, each part will be x
@@ -156,11 +151,13 @@ class CustomColor:
     RED = (255, 0, 0)
     GREEN = (0, 255, 0)
     PINK = (255,0,255)
+    CRYAN = (0, 255, 255)
 
 
 class MODE_PLAY:
     MANUAL = "MANUAL"
     RL_TRAIN = "RL_TRAIN"
+    DEPLOY = "fuck this RL"
 
 
 class GUI:

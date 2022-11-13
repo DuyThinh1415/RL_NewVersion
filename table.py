@@ -12,16 +12,16 @@ class RLAlgorithm:
     def __init__(self, rayCastingData, actions) -> None:
         self.signalPerAreaData = self.convertRayCastingDataToSignalPerArea(
             rayCastingData=rayCastingData)
-        # file = open("curQtable.txt", "r")
-        # RLInFile = file.read()
-        # if not RLInFile:
-        #     # self.Q = self._initQTable(actions=actions) 
-        #     print("bruh ???")
-        # else:
-        #     self.Q = json.loads(RLInFile)
-        #     print("Load completed")
+        file = open("curQtable.txt", "r")
+        RLInFile = file.read()
+        if not RLInFile:
+            # self.Q = self._initQTable(actions=actions) 
+            print("bruh ???")
+        else:
+            self.Q = json.loads(RLInFile)
+            print("Load completed")
 
-        self.Q = self._initQTable(actions=actions) 
+        # self.Q = self._initQTable(actions=actions) 
         self.actions = actions
 
     def _initQTable(self, actions):
@@ -70,16 +70,28 @@ class RLAlgorithm:
         tmpData = [0] * (RLParam.AREA_RAY_CASTING_NUMBERS +
                          (0 if mod == 0 else 1))
         
-        tmpCount = 0
-        for i in range(len(tmpData)):
-            tmp = []
-            for _ in range(div):
-                tmp.append(rayCastingData[tmpCount])
-                tmpCount += 1
-                if (tmpCount == len(rayCastingData)):
+        tmpList = [22,33,44,55,66,88]
+        # for i in range(len(tmpData)):
+        #     tmp = []
+        #     for _ in range(div):
+        #         tmp.append(rayCastingData[tmpCount])
+        #         tmpCount += 1
+        #         if (tmpCount == len(rayCastingData)):
+        #             break
+        #     tmpData[i] = min(tmp)
+        # return tmpData
+        tmptmptmp = [[],[],[],[],[],[]]
+        for i in range(len(rayCastingData)):
+            for j in range(len(tmpList)):
+                if i < tmpList[j]:
+                    tmptmptmp[j].append(rayCastingData[i])
                     break
-            tmpData[i] = min(tmp)
-        return tmpData
+        tmptmptmp[0].append(min(tmptmptmp[5]))
+        for i in range(5):
+            tmpData[i] = min(tmptmptmp[i])
+        return tmpData[0:RLParam.AREA_RAY_CASTING_NUMBERS]
+
+
 
     @staticmethod
     def hashFromDistanceToState(signalPerAreaData, leftSideDistance, rightSideDistance, angle, yver):  # Tu
@@ -112,7 +124,7 @@ class RLAlgorithm:
         if angle > 270 or angle < 90:
             hashFromAngle = RLParam.LEVEL_OF_ANGLE.BACK
         else:
-            hashFromAngle = RLParam.LEVEL_OF_ANGLE.LIST_LEVEL_ANGLES[int((angle-90)/30)+1]
+            hashFromAngle = RLParam.LEVEL_OF_ANGLE.LIST_LEVEL_ANGLES[int((angle-90)/60)+1]
         # print(angle ," => ",hashFromAngle)
 
         hashFromYver = ""
@@ -120,7 +132,14 @@ class RLAlgorithm:
             hashFromYver = RLParam.Y_VER.BACK
         else:
             yver = min(yver,49)
-            hashFromYver = RLParam.Y_VER.LIST_LEVEL_YVER[int(yver/10)+1]
+            if (yver < 0):
+                hashFromYver = RLParam.Y_VER.BACK
+            elif yver < 20:
+                hashFromYver = RLParam.Y_VER.FORD1
+            else:
+                hashFromYver = RLParam.Y_VER.FORD2
+
+        # print(hashFromCenterOfLane)
 
         return hashFromRayCasting + hashFromCenterOfLane + hashFromAngle + hashFromYver
 
@@ -140,7 +159,7 @@ class RLAlgorithm:
             if lidarState == 0:
                 finalReward += -100
             elif lidarState == 1:
-                finalReward += -10
+                finalReward += -20
             else:
                 finalReward += 1
 
@@ -151,7 +170,7 @@ class RLAlgorithm:
         if centerState == RLParam.LEVEL_OF_LANE.MIDDLE:
             finalReward += 10
         elif centerState == RLParam.LEVEL_OF_LANE.RIGHT or centerState == RLParam.LEVEL_OF_LANE.LEFT:
-            finalReward += -30
+            finalReward += -5
         elif centerState == RLParam.LEVEL_OF_LANE.MOST_RIGHT or centerState == RLParam.LEVEL_OF_LANE.MOST_LEFT:
             finalReward += -100
 
@@ -162,7 +181,7 @@ class RLAlgorithm:
 
         # Prevent stop and go back action
         y_Ver = math.cos(currPlayer.currAngle)*currPlayer.currVelocity
-        finalReward += -1*y_Ver*0.5
+        finalReward += -1*y_Ver
 
         # comment += str(finalReward-lastReward)+" collision:"
         # lastReward = finalReward
@@ -186,6 +205,9 @@ class RLAlgorithm:
 
         if currPlayer.yPos < 0:
             finalReward += 100000 # heel yeah
+
+        if currPlayer.yPos > GameSettingParam.HEIGHT:
+            finalReward += RLParam.GO_FUCKING_DEAD
 
         # comment += str(finalReward-lastReward) + "\n"
         # progressFile.write(comment)
@@ -227,6 +249,8 @@ class RLAlgorithm:
             # startTime = time.time()
             # stateList = ""
             startPoint = (PlayerParam.INITIAL_X,PlayerParam.INITIAL_Y)
+
+            unTrainedParam = 0
             
             done = False
             curEpochMap = np.zeros((GameSettingParam.HEIGHT,GameSettingParam.WIDTH,3),dtype="uint8")
@@ -234,22 +258,25 @@ class RLAlgorithm:
             for obj in env.currObstacles:
                 curEpochMap = cv2.circle(curEpochMap,(obj.xPos,obj.yPos),20,(0,0,255),-1)
 
-            RLParam.LAND_MARK_LIST = [1000]*30
+            RLParam.LAND_MARK_LIST = [400]*30
 
             for actionCount in range(RLParam.MAX_EPISODE_STEPS):
                 
                 # print(" action:",actionCount,"episode:",e+1,"state:", state, "currentReward",totalReward,end="   ")
+                
                 actionIndex = self._epsilonGreedyPolicy(currState=state)
                 nextState, reward, done = env.updateStateByAction(actionIndex)
                 totalReward += reward
-                self.Q[state][actionIndex] = self.Q[state][actionIndex] + \
+                if self.Q[state][actionIndex] == 0:
+                    unTrainedParam += 1
+                self.Q[state][actionIndex] = (1-alpha)*self.Q[state][actionIndex] + \
                     alpha * (reward + RLParam.GAMMA *
-                             np.max(self.Q[nextState]) - self.Q[state][actionIndex])
+                             np.max(self.Q[nextState]))
                 state = nextState
 
-                if e%10 == 0:
+                if actionCount%20 == 0:
                     curPoint = (int(env.xPos),int(env.yPos))
-                    drawColor = (255,100,255)
+                    drawColor = (255,0,255)
                     if (int(actionCount/100)%2 == 0):
                         drawColor = (0,255,0)
 
@@ -268,16 +295,17 @@ class RLAlgorithm:
                 if done or actionCount == RLParam.MAX_EPISODE_STEPS - 1: 
                     # totalReward -=  (actionCount + 1) * 0.01 # 120s * 1 = 120
                     break
-            if e%10 == 0:
+            if e%1 == 0:
                 cv2.addWeighted(visualMap,0.5,curEpochMap,1,0.0,visualMap)
                 visualMapWText = visualMap.copy()
-                visualMapWText = cv2.putText(visualMapWText,str(int(totalReward)),(20,730),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
+                visualMapWText = cv2.putText(visualMapWText,str(int(totalReward)),(20,GameSettingParam.HEIGHT - 50),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 visualMapWText = cv2.putText(visualMapWText,str(e),(20,20),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 visualMapWText = cv2.putText(visualMapWText,str(actionCount),(20,40),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
+                visualMapWText = cv2.putText(visualMapWText,str(sum(RLParam.LAND_MARK_LIST)/1000),(300,40),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 cv2.imshow("Last Path",visualMapWText)
                 outputVideo.write(visualMapWText)
             # print("step time: ",time.time() - startTime)
-            comment = f"Episode {e + 1}, xPos={env.xPos} - yPos={env.yPos} : total reward in {actionCount} actions -> {totalReward}\n"
+            comment = f"Episode {e + 1}, xPos={env.xPos} - yPos={env.yPos} : total reward in {actionCount} actions -> {totalReward}, trained {unTrainedParam} param\n"
             # comment += stateList+"\n"
 
 
@@ -288,16 +316,18 @@ class RLAlgorithm:
             # RLParam.EPSILON = max(RLParam.EPSILON-0.0002,0)
 
             progressFile.write(comment)
+
+            print("avg time in epoch",e,(startTime - time.time())/(e+1))
             
-            print(f"stime: {time.time() - startTime}, Episode {e}: total reward in {actionCount} actions -> {totalReward} , max reward: {maxReward}")
+            # print(f"Episode {e} trained {unTrainedParam} param: total reward in {actionCount} actions -> {totalReward} , max reward: {maxReward}")
 
             if (e%5000 == 0 and e!=0):
                 print("Save mode -------------- ",end="")
-                file = open("curQtable.txt", "w")
+                file = open("D:/RL/curQtable.txt", "w")
                 file.write(json.dumps(self.Q))
                 file.close()
 
-                file = open("maxReward.txt", "w")
+                file = open("D:/RL/maxReward.txt", "w")
                 file.write(json.dumps(maxQ))
                 file.close()
 
@@ -315,11 +345,11 @@ class RLAlgorithm:
         print("Save Q table")
 
         outputVideo.release()
-        file = open("curQtable.txt", "w")
+        file = open("D:/RL/curQtable.txt", "w")
         file.write(json.dumps(self.Q))
         file.close()
 
-        file = open("maxReward.txt", "w")
+        file = open("D:/RL/maxReward.txt", "w")
         file.write(json.dumps(maxQ))
         file.close()
 
