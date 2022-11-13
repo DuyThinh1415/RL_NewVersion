@@ -158,18 +158,29 @@ class Player():
                 isDetectObject = False
 
                 for obstacle in inRangedObj:
+                    print("Player: (", self.xPos, ", ", self.yPos, ")")
+                    print("Target: (", target_x, ", ", target_y, ")")
+                    print("Obstacle: (", obstacle.xPos, ", ", obstacle.yPos, ")")
                     distance = Utils.getDistanceFromObstacle(self.xPos, self.yPos, target_x, target_y, obstacle.xPos, obstacle.yPos)
                     self.rayCastingLists[ray] = distance
                     if distance <= PlayerParam.RADIUS_LIDAR:
+                        print("catch")
                         # stop = True
                         isDetectObject = True
                         if GameSettingParam.DRAW:
                             pygame.draw.line(GLOBAL_SCREEN, CustomColor.WHITE, (self.xPos, self.yPos), (target_x, target_y))
+                    elif distance == PlayerParam.INFINITY:
+                        print("infinity")
+                        if GameSettingParam.DRAW:
+                            pygame.draw.line(GLOBAL_SCREEN, CustomColor.CRYAN, (self.xPos, self.yPos), (target_x, target_y))
                     else:
+                        print('other')
                         if GameSettingParam.DRAW:
                             pygame.draw.line(GLOBAL_SCREEN, CustomColor.PINK, (self.xPos, self.yPos), (target_x, target_y))
+                    print("\n")
                     if isDetectObject:
                         break
+                startAngle += PlayerParam.STEP_ANGLE
 
                 # for fdepth in range(int((PlayerParam.RADIUS_LIDAR)/10+1)):
                 #     depth = fdepth*10
@@ -198,7 +209,6 @@ class Player():
                 #             break
                         
                 # print("\n\n")
-                startAngle += PlayerParam.STEP_ANGLE
             # print("obj: ",time.time() - startTime)  
         # print("_rayCasting: ",time.time() - startTime)
         # print(self.rayCastingLists)

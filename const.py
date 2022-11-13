@@ -4,11 +4,11 @@ import math
 class GameSettingParam:
     CAPTION = "Reinforcement Learning"
     WIDTH = 400
-    HEIGHT = 1500
+    HEIGHT = 700
     # HEIGHT = 1800
     FPS = 20
 
-    DRAW = False
+    DRAW = True
 
 
 class PlayerParam:
@@ -155,6 +155,7 @@ class CustomColor:
     WHITE = (255, 255, 255)
     RED = (255, 0, 0)
     GREEN = (0, 255, 0)
+    CRYAN = (0, 255, 255)
     PINK = (255,0,255)
 
 
@@ -170,4 +171,4 @@ class GUI:
 class Equation:
     NO_SOLUTION = 0
     ONE_SOLUTION = 1
-    TWO_SOLUTUON = 2
+    TWO_SOLUTION = 2
