@@ -155,31 +155,32 @@ class Player():
                     startAngle += PlayerParam.STEP_ANGLE
                     continue
 
-                isDetectObject = False
+                # isDetectObject = PlayerParam.INFINITY
+                distance = PlayerParam.INFINITY
 
                 for obstacle in inRangedObj:
-                    print("Player: (", self.xPos, ", ", self.yPos, ")")
-                    print("Target: (", target_x, ", ", target_y, ")")
-                    print("Obstacle: (", obstacle.xPos, ", ", obstacle.yPos, ")")
-                    distance = Utils.getDistanceFromObstacle(self.xPos, self.yPos, target_x, target_y, obstacle.xPos, obstacle.yPos)
-                    self.rayCastingLists[ray] = distance
-                    if distance <= PlayerParam.RADIUS_LIDAR:
-                        print("catch")
-                        # stop = True
-                        isDetectObject = True
-                        if GameSettingParam.DRAW:
-                            pygame.draw.line(GLOBAL_SCREEN, CustomColor.WHITE, (self.xPos, self.yPos), (target_x, target_y))
-                    elif distance == PlayerParam.INFINITY:
-                        print("infinity")
-                        if GameSettingParam.DRAW:
-                            pygame.draw.line(GLOBAL_SCREEN, CustomColor.CRYAN, (self.xPos, self.yPos), (target_x, target_y))
-                    else:
-                        print('other')
-                        if GameSettingParam.DRAW:
-                            pygame.draw.line(GLOBAL_SCREEN, CustomColor.PINK, (self.xPos, self.yPos), (target_x, target_y))
-                    print("\n")
-                    if isDetectObject:
-                        break
+                    # print("Player: (", self.xPos, ", ", self.yPos, ")")
+                    # print("Target: (", target_x, ", ", target_y, ")")
+                    # print("Obstacle: (", obstacle.xPos, ", ", obstacle.yPos, ")")
+                    distance = min(distance,Utils.getDistanceFromObstacle(self.xPos, self.yPos, target_x, target_y, obstacle.xPos, obstacle.yPos))
+                    
+                self.rayCastingLists[ray] = distance
+                if distance <= PlayerParam.RADIUS_LIDAR:
+                    # print("catch")
+                    # stop = True
+                    target_x = self.xPos - math.sin(startAngle) * distance
+                    target_y = self.yPos + math.cos(startAngle) * distance
+                    if GameSettingParam.DRAW:
+                        pygame.draw.line(GLOBAL_SCREEN, CustomColor.WHITE, (self.xPos, self.yPos), (target_x, target_y))
+                elif distance == PlayerParam.INFINITY:
+                    # print("infinity")
+                    if GameSettingParam.DRAW:
+                        pygame.draw.line(GLOBAL_SCREEN, CustomColor.CRYAN, (self.xPos, self.yPos), (target_x, target_y))
+                else:
+                    # print('other')
+                    if GameSettingParam.DRAW:
+                        pygame.draw.line(GLOBAL_SCREEN, CustomColor.PINK, (self.xPos, self.yPos), (target_x, target_y))
+                # print("\n")
                 startAngle += PlayerParam.STEP_ANGLE
 
                 # for fdepth in range(int((PlayerParam.RADIUS_LIDAR)/10+1)):
