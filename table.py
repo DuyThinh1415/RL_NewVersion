@@ -12,16 +12,16 @@ class RLAlgorithm:
     def __init__(self, rayCastingData, actions) -> None:
         self.signalPerAreaData = self.convertRayCastingDataToSignalPerArea(
             rayCastingData=rayCastingData)
-        # file = open("curQtable.txt", "r")
-        # RLInFile = file.read()
-        # if not RLInFile:
-        #     # self.Q = self._initQTable(actions=actions) 
-        #     print("bruh ???")
-        # else:
-        #     self.Q = json.loads(RLInFile)
-        #     print("Load completed")
+        file = open("curQtable.txt", "r")
+        RLInFile = file.read()
+        if not RLInFile:
+            # self.Q = self._initQTable(actions=actions) 
+            print("bruh ???")
+        else:
+            self.Q = json.loads(RLInFile)
+            print("Load completed")
 
-        self.Q = self._initQTable(actions=actions) 
+        # self.Q = self._initQTable(actions=actions) 
         self.actions = actions
 
     def _initQTable(self, actions):
@@ -70,16 +70,28 @@ class RLAlgorithm:
         tmpData = [0] * (RLParam.AREA_RAY_CASTING_NUMBERS +
                          (0 if mod == 0 else 1))
         
-        tmpCount = 0
-        for i in range(len(tmpData)):
-            tmp = []
-            for _ in range(div):
-                tmp.append(rayCastingData[tmpCount])
-                tmpCount += 1
-                if (tmpCount == len(rayCastingData)):
+        tmpList = [22,33,44,55,66,88]
+        # for i in range(len(tmpData)):
+        #     tmp = []
+        #     for _ in range(div):
+        #         tmp.append(rayCastingData[tmpCount])
+        #         tmpCount += 1
+        #         if (tmpCount == len(rayCastingData)):
+        #             break
+        #     tmpData[i] = min(tmp)
+        # return tmpData
+        tmptmptmp = [[],[],[],[],[],[]]
+        for i in range(len(rayCastingData)):
+            for j in range(len(tmpList)):
+                if i < tmpList[j]:
+                    tmptmptmp[j].append(rayCastingData[i])
                     break
-            tmpData[i] = min(tmp)
-        return tmpData
+        tmptmptmp[0].append(min(tmptmptmp[5]))
+        for i in range(5):
+            tmpData[i] = min(tmptmptmp[i])
+        return tmpData[0:RLParam.AREA_RAY_CASTING_NUMBERS]
+
+
 
     @staticmethod
     def hashFromDistanceToState(signalPerAreaData, leftSideDistance, rightSideDistance, angle, yver):  # Tu
@@ -112,7 +124,7 @@ class RLAlgorithm:
         if angle > 270 or angle < 90:
             hashFromAngle = RLParam.LEVEL_OF_ANGLE.BACK
         else:
-            hashFromAngle = RLParam.LEVEL_OF_ANGLE.LIST_LEVEL_ANGLES[int((angle-90)/30)+1]
+            hashFromAngle = RLParam.LEVEL_OF_ANGLE.LIST_LEVEL_ANGLES[int((angle-90)/60)+1]
         # print(angle ," => ",hashFromAngle)
 
         hashFromYver = ""
@@ -120,7 +132,14 @@ class RLAlgorithm:
             hashFromYver = RLParam.Y_VER.BACK
         else:
             yver = min(yver,49)
-            hashFromYver = RLParam.Y_VER.LIST_LEVEL_YVER[int(yver/10)+1]
+            if (yver < 0):
+                hashFromYver = RLParam.Y_VER.BACK
+            elif yver < 20:
+                hashFromYver = RLParam.Y_VER.FORD1
+            else:
+                hashFromYver = RLParam.Y_VER.FORD2
+
+        # print(hashFromCenterOfLane)
 
         return hashFromRayCasting + hashFromCenterOfLane + hashFromAngle + hashFromYver
 
@@ -136,13 +155,13 @@ class RLAlgorithm:
         centerState = stateArr[RLParam.AREA_RAY_CASTING_NUMBERS]
 
         # Obstacles block car
-        for lidarState in lidarStates:
-            if lidarState == 0:
-                finalReward += -100
-            elif lidarState == 1:
-                finalReward += -10
-            else:
-                finalReward += 1
+        lidarState = min(lidarStates)
+        if lidarState == 0:
+            finalReward += -200
+        elif lidarState == 1:
+            finalReward += -20
+        else:
+            finalReward += 5
 
         # comment += str(finalReward-lastReward)+" lane:"
         # lastReward = finalReward
@@ -151,7 +170,7 @@ class RLAlgorithm:
         if centerState == RLParam.LEVEL_OF_LANE.MIDDLE:
             finalReward += 10
         elif centerState == RLParam.LEVEL_OF_LANE.RIGHT or centerState == RLParam.LEVEL_OF_LANE.LEFT:
-            finalReward += -30
+            finalReward += -5
         elif centerState == RLParam.LEVEL_OF_LANE.MOST_RIGHT or centerState == RLParam.LEVEL_OF_LANE.MOST_LEFT:
             finalReward += -100
 
@@ -162,7 +181,7 @@ class RLAlgorithm:
 
         # Prevent stop and go back action
         y_Ver = math.cos(currPlayer.currAngle)*currPlayer.currVelocity
-        finalReward += -1*y_Ver*0.5
+        finalReward += -0.5*y_Ver
 
         # comment += str(finalReward-lastReward)+" collision:"
         # lastReward = finalReward
@@ -173,19 +192,15 @@ class RLAlgorithm:
         # comment += str(finalReward-lastReward)+" outOfRoad:"
         # lastReward = finalReward
 
-        curLAndMark = int(currPlayer.yPos*30/GameSettingParam.HEIGHT)
-        curLAndMark = min(curLAndMark,29)
-        curLAndMark = max(curLAndMark,0)
-        finalReward += RLParam.LAND_MARK_LIST[curLAndMark]
-        
-        RLParam.LAND_MARK_LIST[curLAndMark] = 0
-
 
         if currPlayer.xPos < 0 or  currPlayer.xPos > GameSettingParam.WIDTH:
             finalReward += RLParam.GO_FUCKING_DEAD
 
         if currPlayer.yPos < 0:
             finalReward += 100000 # heel yeah
+
+        if currPlayer.yPos > GameSettingParam.HEIGHT:
+            finalReward += RLParam.GO_FUCKING_DEAD
 
         # comment += str(finalReward-lastReward) + "\n"
         # progressFile.write(comment)
@@ -214,7 +229,10 @@ class RLAlgorithm:
         outputVideo = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (GameSettingParam.WIDTH,GameSettingParam.HEIGHT))
         startTime = time.time()
         e = -1
+        mapCounter  = 0
+        numPassOnThisMap = 0
         while True:
+            
             e+=1
             state = env.getCurrentState()
             totalReward = 0
@@ -227,29 +245,32 @@ class RLAlgorithm:
             # startTime = time.time()
             # stateList = ""
             startPoint = (PlayerParam.INITIAL_X,PlayerParam.INITIAL_Y)
+
+            unTrainedParam = 0
             
             done = False
             curEpochMap = np.zeros((GameSettingParam.HEIGHT,GameSettingParam.WIDTH,3),dtype="uint8")
 
             for obj in env.currObstacles:
-                curEpochMap = cv2.circle(curEpochMap,(obj.xPos,obj.yPos),20,(0,0,255),-1)
-
-            RLParam.LAND_MARK_LIST = [1000]*30
+                curEpochMap = cv2.circle(curEpochMap,(int(obj.xPos),int(obj.yPos)),20,(0,0,255),-1)
 
             for actionCount in range(RLParam.MAX_EPISODE_STEPS):
                 
                 # print(" action:",actionCount,"episode:",e+1,"state:", state, "currentReward",totalReward,end="   ")
+                
                 actionIndex = self._epsilonGreedyPolicy(currState=state)
                 nextState, reward, done = env.updateStateByAction(actionIndex)
                 totalReward += reward
-                self.Q[state][actionIndex] = self.Q[state][actionIndex] + \
+                if self.Q[state][actionIndex] == 0:
+                    unTrainedParam += 1
+                self.Q[state][actionIndex] = (1-alpha)*self.Q[state][actionIndex] + \
                     alpha * (reward + RLParam.GAMMA *
-                             np.max(self.Q[nextState]) - self.Q[state][actionIndex])
+                             np.max(self.Q[nextState]))
                 state = nextState
 
-                if e%10 == 0:
+                if actionCount%20 == 0:
                     curPoint = (int(env.xPos),int(env.yPos))
-                    drawColor = (255,100,255)
+                    drawColor = (255,0,255)
                     if (int(actionCount/100)%2 == 0):
                         drawColor = (0,255,0)
 
@@ -268,16 +289,19 @@ class RLAlgorithm:
                 if done or actionCount == RLParam.MAX_EPISODE_STEPS - 1: 
                     # totalReward -=  (actionCount + 1) * 0.01 # 120s * 1 = 120
                     break
-            if e%10 == 0:
+            if e%1 == 0:
                 cv2.addWeighted(visualMap,0.5,curEpochMap,1,0.0,visualMap)
                 visualMapWText = visualMap.copy()
-                visualMapWText = cv2.putText(visualMapWText,str(int(totalReward)),(20,730),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
+                visualMapWText = cv2.putText(visualMapWText,str(int(totalReward)),(20,GameSettingParam.HEIGHT - 50),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 visualMapWText = cv2.putText(visualMapWText,str(e),(20,20),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 visualMapWText = cv2.putText(visualMapWText,str(actionCount),(20,40),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
+                visualMapWText = cv2.putText(visualMapWText,str(numPassOnThisMap),(300,40),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 cv2.imshow("Last Path",visualMapWText)
                 outputVideo.write(visualMapWText)
             # print("step time: ",time.time() - startTime)
-            comment = f"Episode {e + 1}, xPos={env.xPos} - yPos={env.yPos} : total reward in {actionCount} actions -> {totalReward}\n"
+            comment = f"{e + 1}: act {actionCount} -> {totalReward}, map {mapCounter} -=- "
+            if e%10 == 0 and e != 0:
+                comment += "\n"
             # comment += stateList+"\n"
 
 
@@ -289,7 +313,7 @@ class RLAlgorithm:
 
             progressFile.write(comment)
             
-            print(f"stime: {time.time() - startTime}, Episode {e}: total reward in {actionCount} actions -> {totalReward} , max reward: {maxReward}")
+            print(f"Episode {e} trained {(time.time() - startTime)/(e+1)}s : rw {actionCount} actions: {totalReward}, max reward: {maxReward}")
 
             if (e%5000 == 0 and e!=0):
                 print("Save mode -------------- ",end="")
@@ -302,11 +326,17 @@ class RLAlgorithm:
                 file.close()
 
                 print("Done")
+
+            if env.yPos < 0:
+                numPassOnThisMap += 1
+            if numPassOnThisMap > 5:
+                numPassOnThisMap = 0
+                env = env.reset(True)
+            else:
+                env = env.reset(False)
+
+
             
-            
-            
-            
-            env = env.reset()
 
             if cv2.waitKey(1) == 27:
                 break
