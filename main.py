@@ -96,49 +96,45 @@ class Player():
                                                                angle=self.currAngle,
                                                                 yver= -1*math.cos(self.currAngle)*self.currVelocity)
 
-            frame = np.zeros((512,512,3),"uint8")
-            frame = cv2.ellipse(frame,(256,256),(20,20),0,0,360,(0,255,0),-1)
-            for i in range(1,5):
-                idx = int(currentState[i])*30 + 30
-                frame = cv2.ellipse(frame,(256,256),(idx,idx),0,180 + i*45-45,180 + i*45,(256,256,128),2)
-            idx = int(currentState[0])*30 + 30
-            frame = cv2.ellipse(frame,(256,256),(idx,idx),0,0,180,(256,256,128),2)
+            # frame = np.zeros((512,512,3),"uint8")
+            # frame = cv2.ellipse(frame,(256,256),(20,20),0,0,360,(0,255,0),-1)
+            # for i in range(1,5):
+            #     idx = int(currentState[i])*30 + 30
+            #     frame = cv2.ellipse(frame,(256,256),(idx,idx),0,180 + i*45-45,180 + i*45,(256,256,128),2)
+            # idx = int(currentState[0])*30 + 30
+            # frame = cv2.ellipse(frame,(256,256),(idx,idx),0,0,180,(256,256,128),2)
 
-            idx = int(currentState[5])
-            if idx == 3:
-                idx = 4
-            elif idx == 4:
-                idx = 3
-            idx = 4-idx
-            frame = cv2.rectangle(frame,(idx*102,480),(idx*102 + 102,512),(100,255,200),-1)
+            # idx = int(currentState[5])
+            # if idx == 3:
+            #     idx = 4
+            # elif idx == 4:
+            #     idx = 3
+            # idx = 4-idx
+            # frame = cv2.rectangle(frame,(idx*102,480),(idx*102 + 102,512),(100,255,200),-1)
 
-            idx = int(currentState[6])
-            if idx == 0:
-                frame = cv2.ellipse(frame,(256,256),(100,100),0,0,180,(256,0,64),2)
-                pass
-            else:
-                frame = cv2.ellipse(frame,(256,256),(100,100),0,180 + idx*60-60,180 + idx*60,(256,0,64),2)
+            # idx = int(currentState[6])
+            # if idx == 0:
+            #     frame = cv2.ellipse(frame,(256,256),(100,100),0,0,180,(256,0,64),2)
+            #     pass
+            # else:
+            #     frame = cv2.ellipse(frame,(256,256),(100,100),0,180 + idx*60-60,180 + idx*60,(256,0,64),2)
             
-            cv2.putText(frame,currentState[7],(240,260), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,256),1,cv2.LINE_AA)
+            # cv2.putText(frame,currentState[7],(240,260), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,256),1,cv2.LINE_AA)
 
-            cv2.imshow("robot view",frame)
+            # cv2.imshow("robot view",frame)
 
 
-            if (action != -1):
-                print(currentState, " -> ",action)
-            cv2.waitKey(5)
+            # if (action != -1):
+            #     print(currentState, " -> ",action)
+            # cv2.waitKey(5)
 
         elif (self.mode == MODE_PLAY.RL_TRAIN):
 
             if RLParam.ACTIONS[actionIndex] == PlayerParam.INC_ROTATION_VELO:
-                self.currRotationVelocity -= PlayerParam.ACCELERATION_ROTATE
-
-            if RLParam.ACTIONS[actionIndex] == PlayerParam.DESC_ROTATION_VELO:
                 self.currRotationVelocity += PlayerParam.ACCELERATION_ROTATE
 
-            if RLParam.ACTIONS[actionIndex] == PlayerParam.STOP:
-                self.currVelocity = 0
-                self.currRotationVelocity = 0
+            if RLParam.ACTIONS[actionIndex] == PlayerParam.DESC_ROTATION_VELO:
+                self.currRotationVelocity -= PlayerParam.ACCELERATION_ROTATE
 
             if RLParam.ACTIONS[actionIndex] == PlayerParam.INC_FORWARD_VELO:
                 self.currVelocity = min(
@@ -154,7 +150,7 @@ class Player():
                                                                rightSideDistance=abs(self.xPos - GameSettingParam.WIDTH),
                                                                angle=self.currAngle,
                                                                 yver= -1*math.cos(self.currAngle)*self.currVelocity)
-            print(currentState)
+            # print(currentState)
 
             decidedAction = np.argmax(self.deployedQTabled[currentState])
 
@@ -278,14 +274,14 @@ class Obstacle(Player):
         super().__init__(maxVelocity=PlayerParam.MAX_VELOCITY,
                          maxRotationVelocity=PlayerParam.MAX_ROTATION_VELOCITY)
 
-        # self.xPos = random.randint(int(0.3*GameSettingParam.WIDTH), int(
-        #     0.7*GameSettingParam.WIDTH))
+        self.xPos = random.randint(int(0.3*GameSettingParam.WIDTH), int(
+            0.7*GameSettingParam.WIDTH))
 
-        # self.yPos = ObstacleParam.INITIAL_OBSTACLE_Y + random.randint(0, int(
-        #     0.9*GameSettingParam.HEIGHT))
+        self.yPos = ObstacleParam.INITIAL_OBSTACLE_Y + random.randint(0, int(
+            0.6*GameSettingParam.HEIGHT))
 
-        self.xPos = 190
-        self.yPos = 450
+        # self.xPos = 190
+        # self.yPos = 300
         if GameSettingParam.DRAW:
             self.circleRect = pygame.draw.circle(
                 GLOBAL_SCREEN, CustomColor.GREEN, (self.xPos, self.yPos), PlayerParam.RADIUS_OBJECT)
@@ -306,9 +302,6 @@ class Obstacle(Player):
             self.currRotationVelocity += ObstacleParam.OBSTACLE_ACCELERATION_ROTATE
         if choosedKey == PlayerParam.DESC_ROTATION_VELO:
             self.currRotationVelocity -= ObstacleParam.OBSTACLE_ACCELERATION_ROTATE
-        if choosedKey == PlayerParam.STOP:
-            self.currVelocity = 0
-            self.currRotationVelocity = 0
         if choosedKey == PlayerParam.INC_FORWARD_VELO:
             self.currVelocity = min(
                 self.currVelocity + ObstacleParam.OBSTACLE_ACCELERATION_FORWARD, self.maxVelocity)
@@ -409,7 +402,7 @@ class Environment:
                                                    angle=self.currPlayer.currAngle,
                                                    yver= -1*math.cos(self.currPlayer.currAngle)*self.currPlayer.currVelocity)
 
-    def reset(self):
+    def reset(self, newObj = False):
         # self.currPlayer = None
         # self.currPlayer = Player(maxVelocity=PlayerParam.MAX_VELOCITY,
         #         maxRotationVelocity=PlayerParam.MAX_ROTATION_VELOCITY)
@@ -427,14 +420,19 @@ class Environment:
         # self.currPlayer.draw(actionIndex=2)
         # for obstacle in self.currObstacles:
         #     obstacle.draw()
+        curObj = self.currObstacles
         del self
         global player, obstacles
         player = Player(maxVelocity=PlayerParam.MAX_VELOCITY,
                 maxRotationVelocity=PlayerParam.MAX_ROTATION_VELOCITY) 
-        obstacles = []
-        for _ in range(ObstacleParam.NUMBER_OF_OBSTACLES):
-            obstacles.append(Obstacle())
-        return Environment(currentPlayer=player, currentObstacles=obstacles)
+
+        if newObj:
+            obstacles = []
+            for _ in range(ObstacleParam.NUMBER_OF_OBSTACLES):
+                obstacles.append(Obstacle())
+            return Environment(currentPlayer=player, currentObstacles=obstacles)
+        else:
+            return Environment(currentPlayer=player, currentObstacles=curObj)
                     
 ###########################################################################################
 
@@ -454,6 +452,7 @@ for _ in range(ObstacleParam.NUMBER_OF_OBSTACLES):
 
 
 def startGame(mode=MODE_PLAY.MANUAL):
+    player.mode = mode
     if (mode == MODE_PLAY.MANUAL):
         while True:
             GLOBAL_CLOCK.tick(GameSettingParam.FPS)

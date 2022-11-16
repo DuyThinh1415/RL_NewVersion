@@ -155,13 +155,13 @@ class RLAlgorithm:
         centerState = stateArr[RLParam.AREA_RAY_CASTING_NUMBERS]
 
         # Obstacles block car
-        for lidarState in lidarStates:
-            if lidarState == 0:
-                finalReward += -100
-            elif lidarState == 1:
-                finalReward += -20
-            else:
-                finalReward += 1
+        lidarState = min(lidarStates)
+        if lidarState == 0:
+            finalReward += -200
+        elif lidarState == 1:
+            finalReward += -20
+        else:
+            finalReward += 5
 
         # comment += str(finalReward-lastReward)+" lane:"
         # lastReward = finalReward
@@ -181,7 +181,7 @@ class RLAlgorithm:
 
         # Prevent stop and go back action
         y_Ver = math.cos(currPlayer.currAngle)*currPlayer.currVelocity
-        finalReward += -1*y_Ver
+        finalReward += -0.5*y_Ver
 
         # comment += str(finalReward-lastReward)+" collision:"
         # lastReward = finalReward
@@ -191,13 +191,6 @@ class RLAlgorithm:
 
         # comment += str(finalReward-lastReward)+" outOfRoad:"
         # lastReward = finalReward
-
-        curLAndMark = int(currPlayer.yPos*30/GameSettingParam.HEIGHT)
-        curLAndMark = min(curLAndMark,29)
-        curLAndMark = max(curLAndMark,0)
-        finalReward += RLParam.LAND_MARK_LIST[curLAndMark]
-        
-        RLParam.LAND_MARK_LIST[curLAndMark] = 0
 
 
         if currPlayer.xPos < 0 or  currPlayer.xPos > GameSettingParam.WIDTH:
@@ -236,7 +229,10 @@ class RLAlgorithm:
         outputVideo = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 30, (GameSettingParam.WIDTH,GameSettingParam.HEIGHT))
         startTime = time.time()
         e = -1
+        mapCounter  = 0
+        numPassOnThisMap = 0
         while True:
+            
             e+=1
             state = env.getCurrentState()
             totalReward = 0
@@ -256,9 +252,7 @@ class RLAlgorithm:
             curEpochMap = np.zeros((GameSettingParam.HEIGHT,GameSettingParam.WIDTH,3),dtype="uint8")
 
             for obj in env.currObstacles:
-                curEpochMap = cv2.circle(curEpochMap,(obj.xPos,obj.yPos),20,(0,0,255),-1)
-
-            RLParam.LAND_MARK_LIST = [400]*30
+                curEpochMap = cv2.circle(curEpochMap,(int(obj.xPos),int(obj.yPos)),20,(0,0,255),-1)
 
             for actionCount in range(RLParam.MAX_EPISODE_STEPS):
                 
@@ -301,11 +295,13 @@ class RLAlgorithm:
                 visualMapWText = cv2.putText(visualMapWText,str(int(totalReward)),(20,GameSettingParam.HEIGHT - 50),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 visualMapWText = cv2.putText(visualMapWText,str(e),(20,20),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 visualMapWText = cv2.putText(visualMapWText,str(actionCount),(20,40),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
-                visualMapWText = cv2.putText(visualMapWText,str(sum(RLParam.LAND_MARK_LIST)/1000),(300,40),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
+                visualMapWText = cv2.putText(visualMapWText,str(numPassOnThisMap),(300,40),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 cv2.imshow("Last Path",visualMapWText)
                 outputVideo.write(visualMapWText)
             # print("step time: ",time.time() - startTime)
-            comment = f"Episode {e + 1}, xPos={env.xPos} - yPos={env.yPos} : total reward in {actionCount} actions -> {totalReward}, trained {unTrainedParam} param\n"
+            comment = f"{e + 1}: act {actionCount} -> {totalReward}, map {mapCounter} -=- "
+            if e%10 == 0 and e != 0:
+                comment += "\n"
             # comment += stateList+"\n"
 
 
@@ -316,10 +312,8 @@ class RLAlgorithm:
             # RLParam.EPSILON = max(RLParam.EPSILON-0.0002,0)
 
             progressFile.write(comment)
-
-            print("avg time in epoch",e,(startTime - time.time())/(e+1))
             
-            # print(f"Episode {e} trained {unTrainedParam} param: total reward in {actionCount} actions -> {totalReward} , max reward: {maxReward}")
+            print(f"Episode {e} trained {(time.time() - startTime)/(e+1)}s : rw {actionCount} actions: {totalReward}, max reward: {maxReward}")
 
             if (e%5000 == 0 and e!=0):
                 print("Save mode -------------- ",end="")
@@ -332,11 +326,17 @@ class RLAlgorithm:
                 file.close()
 
                 print("Done")
+
+            if env.yPos < 0:
+                numPassOnThisMap += 1
+            if numPassOnThisMap > 5:
+                numPassOnThisMap = 0
+                env = env.reset(True)
+            else:
+                env = env.reset(False)
+
+
             
-            
-            
-            
-            env = env.reset()
 
             if cv2.waitKey(1) == 27:
                 break

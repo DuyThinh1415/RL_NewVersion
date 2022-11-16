@@ -9,7 +9,7 @@ class GameSettingParam:
     FPS = 20
     
 
-    DRAW = True
+    DRAW = False
 
 
 class PlayerParam:
@@ -22,7 +22,7 @@ class PlayerParam:
     HEIGHT = 30
 
     INITIAL_X = GameSettingParam.WIDTH//2
-    INITIAL_Y = GameSettingParam.HEIGHT - 100
+    INITIAL_Y = GameSettingParam.HEIGHT - 50
 
     MAX_VELOCITY = 50
     MAX_ROTATION_VELOCITY = 20
@@ -35,7 +35,7 @@ class PlayerParam:
 
     INC_ROTATION_VELO = "INC_ROTATION_VELO"
     DESC_ROTATION_VELO = "DESC_ROTATION_VELO"
-    STOP = "STOP"
+    DO_NOTHING = "DO_NOTHING"
     INC_FORWARD_VELO = "INC_FORWARD_VELO"
     DESC_FORWARD_VELO = "DESC_FORWARD_VELO"
     
@@ -43,7 +43,7 @@ class PlayerParam:
 
 
 class ObstacleParam:
-    NUMBER_OF_OBSTACLES = 1
+    NUMBER_OF_OBSTACLES = 3
     OBSTACLE_ACCELERATION_FORWARD = 0
     OBSTACLE_ACCELERATION_ROTATE = 0
     INITIAL_OBSTACLE_X = GameSettingParam.WIDTH//2
@@ -57,7 +57,7 @@ class ObstacleParam:
     # PROBABILITIES_ACTION = [0.001,0.001,0.001,0.001,0.001]
 
 class RLParam:
-    EPSILON = 0.2
+    EPSILON = 0.5
 
     MAX_ALPHA = 0.2
     MIN_ALPHA = 0.5
@@ -85,7 +85,7 @@ class RLParam:
                PlayerParam.INC_ROTATION_VELO,
                PlayerParam.DESC_ROTATION_VELO,
                PlayerParam.DESC_FORWARD_VELO,
-               PlayerParam.STOP]
+               PlayerParam.DO_NOTHING]
 
     DISTANCE_OF_RAY_CASTING = [
         int(PlayerParam.RADIUS_LIDAR*0.5), 

@@ -15,6 +15,8 @@ class Utils:
 
     @staticmethod
     def findLinePassTwoPoints(xPointA, yPointA, xPointB, yPointB):
+        if xPointB == xPointA:
+            xPointA += 0.001
         a = (yPointB - yPointA) / (xPointB - xPointA)
         b = yPointA - a * xPointA
         return a, b
