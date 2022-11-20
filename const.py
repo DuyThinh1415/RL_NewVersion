@@ -1,22 +1,24 @@
 import math
+import numpy as np
 
 
 class GameSettingParam:
     CAPTION = "Reinforcement Learning"
     WIDTH = 400
-    HEIGHT = 700
+    HEIGHT = 750
     # HEIGHT = 1800
-    FPS = 20
+    FPS = 10
     
-
     DRAW = False
+    LOCK_QTable = False
+    dt = float(1/FPS)
 
 
 class PlayerParam:
-    RADIUS_OBJECT = 20
+    RADIUS_OBJECT = 10
 
-    ACCELERATION_FORWARD = 10
-    ACCELERATION_ROTATE = 0.05
+    ACCELERATION_FORWARD = 50
+    ACCELERATION_ROTATE = math.radians(18)
 
     WIDTH = 16
     HEIGHT = 30
@@ -25,13 +27,13 @@ class PlayerParam:
     INITIAL_Y = GameSettingParam.HEIGHT - 50
 
     MAX_VELOCITY = 50
-    MAX_ROTATION_VELOCITY = 20
+    MAX_ROTATION_VELOCITY = 2
 
-    FOV = math.pi*2 - math.radians(8)
+    FOV = math.pi
     HALF_FOV = FOV/2
-    CASTED_RAYS = 88
+    CASTED_RAYS = 30
     STEP_ANGLE = FOV / CASTED_RAYS
-    RADIUS_LIDAR = 100
+    RADIUS_LIDAR = 180
 
     INC_ROTATION_VELO = "INC_ROTATION_VELO"
     DESC_ROTATION_VELO = "DESC_ROTATION_VELO"
@@ -49,11 +51,11 @@ class ObstacleParam:
     INITIAL_OBSTACLE_X = GameSettingParam.WIDTH//2
     INITIAL_OBSTACLE_Y = 0
     
-    PROBABILITIES_ACTION = [0.1,
+    PROBABILITIES_ACTION = [0.4,
                             0.1,
                             0.1,
-                            0.4,
-                            0.3]
+                            0.2,
+                            0.2]
     # PROBABILITIES_ACTION = [0.001,0.001,0.001,0.001,0.001]
 
 class RLParam:
@@ -71,7 +73,7 @@ class RLParam:
 
     GO_FUCKING_DEAD = -1000000
 
-    LAND_MARK_LIST = [400]*30
+    # LAND_MARK_LIST = [400]*30
 
     # ACTIONS = [PlayerParam.INC_ROTATION_VELO,
     #            PlayerParam.DESC_ROTATION_VELO,
@@ -88,7 +90,7 @@ class RLParam:
                PlayerParam.DO_NOTHING]
 
     DISTANCE_OF_RAY_CASTING = [
-        int(PlayerParam.RADIUS_LIDAR*0.5), 
+        int(PlayerParam.RADIUS_LIDAR*0.6), 
         PlayerParam.RADIUS_LIDAR, 
         PlayerParam.INFINITY
     ]
@@ -100,35 +102,39 @@ class RLParam:
         DANGEROUS_DISTANCE = "0" # LIDAR TOUCH OBSTACLE, BUT IN DANGEROUS MODE
 
     class LEVEL_OF_ANGLE:
-        BACK = "0"
+        LLEFT = "0"
         LEFT = "1"
         MID = "2"
         RIGHT = "3"
+        RRIGHT = "4"
 
-        LIST_LEVEL_ANGLES = [BACK,LEFT,MID,RIGHT]  
+        LIST_LEVEL_ANGLES = np.array(range(10),dtype="str")
 
-    class Y_VER:
-        BACK = "0"  #BACK
-        FORD1 = "1"#0-20
-        FORD2 = "2"#20-
-        LIST_LEVEL_YVER = [BACK,FORD1,FORD2]
+    # class Y_VER:
+    #     BACK = "0"  #BACK
+    #     FORD1 = "1"#0-20
+    #     FORD2 = "2"#20-
+    #     LIST_LEVEL_YVER = [BACK,FORD1,FORD2]
+
+    # class OMEGA:
+    #     LL = "0"
+    #     L = "1"
+    #     M = "2"
+    #     R = "3"
+    #     RR = "4"
+    #     LIST_LEVER_OMEGA = [LL,L,M,R,RR]
         
     # | x | 3x | 2x | 3x | x |
     # split the middle area into 2 parts, each part will be x
-    DISTANCE_FROM_CENTER_OF_LANE = [
-        GameSettingParam.WIDTH * 4 / 10,    # most left or most right (distance > 4x/10) (1/2 of middle + 3x area)
-        GameSettingParam.WIDTH * 1 / 10,    # left or right (distance > x/10) (1/2 of middle)
-        0                                   # center (distance > 0) (inside 1/2 of middle)
-    ] # 0 is lucky number, no meaning
+    # DISTANCE_FROM_CENTER_OF_LANE = [
+    #     GameSettingParam.WIDTH * 4 / 10,    # most left or most right (distance > 4x/10) (1/2 of middle + 3x area)
+    #     GameSettingParam.WIDTH * 1 / 10,    # left or right (distance > x/10) (1/2 of middle)
+    #     0                                   # center (distance > 0) (inside 1/2 of middle)
+    # ] # 0 is lucky number, no meaning
     
     class LEVEL_OF_LANE:
-        LEFT = "4"
-        MOST_LEFT = "3"
-        MIDDLE =  "2"
-        RIGHT = "1"
-        MOST_RIGHT = "0"
         
-        LIST_LEVEL_OF_LANE = [LEFT, MOST_LEFT, MIDDLE, RIGHT, MOST_RIGHT]
+        LIST_LEVEL_OF_LANE = np.array(range(20),dtype="str")
         
     class SCORE:
         # lidar detect obstacle
@@ -159,7 +165,8 @@ class MODE_PLAY:
     RL_TRAIN = "RL_TRAIN"
     DEPLOY = "fuck this RL"
 
-
-class GUI:
-    DISPLAY = True
-    HIDDEN = False
+class SOME_PARAM_FOR_CODE_DO:
+    passRayCasting = [0]*45
+    preMinHeight = 0
+    preX = 0
+    preY = 0

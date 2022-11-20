@@ -13,14 +13,14 @@ print(len(lines))
 for line in lines:
     regex = re.findall('-?\d+\.?\d*',line)
     # for i in range(3):
-    data[0].append(float(regex[5]))
+    data[0].append(float(regex[1]))
 
 xCoord = range(len(data[0]))
 # xCoord = range(500)
 # for i in range(3):
 tmp = 0
 for j in xCoord:
-    tmp = tmp*0.99+data[0][j]*0.01
+    tmp = tmp*0.8+data[0][j]*0.2
     data[0][j] = tmp
 
         

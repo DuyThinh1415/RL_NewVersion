@@ -54,7 +54,7 @@ sizeEncodedAction = len(encodedAction)
 #             for i in range(8):
 #                 paramStaticstic[i][0] += 1
 
-for colCehck in range(8):
+for colCehck in range(9):
 
     paramStaticstic = []
 

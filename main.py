@@ -22,13 +22,13 @@ class Player():
     def __init__(self, maxVelocity, maxRotationVelocity):
         super().__init__()
         global GLOBAL_SCREEN
-        self.xPos, self.yPos = PlayerParam.INITIAL_X, PlayerParam.INITIAL_Y
+        self.xPos, self.yPos = PlayerParam.INITIAL_X+random.randint(-150,150), PlayerParam.INITIAL_Y
         self.maxVelocity = maxVelocity
         self.maxRotationVelocity = maxRotationVelocity
 
         self.currVelocity = 0  # always >= 0
         self.currRotationVelocity = 0  # rotate left < 0, rotate right > 0
-        self.currAngle = math.pi
+        self.currAngle = math.pi + random.randint(-3,3)*math.radians(18)
         self.accelerationForward = PlayerParam.ACCELERATION_FORWARD
         if GameSettingParam.DRAW:
             self.circleRect = pygame.draw.circle(
@@ -38,15 +38,18 @@ class Player():
         self.rayCastingLists = [PlayerParam.INFINITY] * PlayerParam.CASTED_RAYS
 
         self.mode = MODE_PLAY.MANUAL
-        self.displayGUI = GUI.DISPLAY
 
     def _move(self):
-        dt = float(1/GameSettingParam.FPS)
 
-        self.currAngle += self.currRotationVelocity*dt
+        # self.currAngle += self.currRotationVelocity*GameSettingParam.dt
 
-        self.yPos += math.cos(self.currAngle) * self.currVelocity * dt
-        self.xPos += -math.sin(self.currAngle) * self.currVelocity * dt
+        # self.yPos += math.cos(self.currAngle) * self.currVelocity * GameSettingParam.dt
+        # self.xPos += -math.sin(self.currAngle) * self.currVelocity * GameSettingParam.dt
+
+        # self.currRotationVelocity = 0
+        # self.currVelocity = 0
+
+        pass
         
         # print(math.degrees(self.currAngle%(math.pi*2)))
     def loadQTable(self):
@@ -64,92 +67,61 @@ class Player():
 
             # Rotate left ()
             if keys[pygame.K_a]:
-                action = 2
-                self.currRotationVelocity -= PlayerParam.ACCELERATION_ROTATE
+                self.currAngle -= PlayerParam.ACCELERATION_ROTATE
             # Rotate right ()
             if keys[pygame.K_d]:
-                action = 1
-                self.currRotationVelocity += PlayerParam.ACCELERATION_ROTATE
+                self.currAngle += PlayerParam.ACCELERATION_ROTATE
+
 
             # Increase forward velocity
             if keys[pygame.K_w]:
-                action = 0
-                self.currVelocity = min(
-                    self.currVelocity + PlayerParam.ACCELERATION_FORWARD, self.maxVelocity)
-
-            # Stop
-            if keys[pygame.K_s]:
-                action = 4
-                self.currVelocity = 0
-                self.currRotationVelocity = 0
+                self.yPos += math.cos(self.currAngle) * PlayerParam.ACCELERATION_FORWARD * GameSettingParam.dt
+                self.xPos += -math.sin(self.currAngle) * PlayerParam.ACCELERATION_FORWARD * GameSettingParam.dt
 
             # Decrease forward velocity
-            if keys[pygame.K_x]:
-                action = 3
-                self.currVelocity = max(
-                    self.currVelocity - PlayerParam.ACCELERATION_FORWARD, -self.maxVelocity)
+            if keys[pygame.K_s]:
+                self.yPos -= math.cos(self.currAngle) * PlayerParam.ACCELERATION_FORWARD * GameSettingParam.dt
+                self.xPos -= -math.sin(self.currAngle) * PlayerParam.ACCELERATION_FORWARD * GameSettingParam.dt
+
+            # Decrease forward velocity
+            # if keys[pygame.K_x]:
+            #     action = 3
+            #     self.currVelocity = max(
+            #         self.currVelocity - PlayerParam.ACCELERATION_FORWARD, -self.maxVelocity)
 
             currentState = RLAlgorithm.hashFromDistanceToState(signalPerAreaData=RLAlgorithm.convertRayCastingDataToSignalPerArea(rayCastingData=self.rayCastingLists),
                                                                leftSideDistance=abs(
                                                                    self.xPos),
                                                                rightSideDistance=abs(self.xPos - GameSettingParam.WIDTH),
                                                                angle=self.currAngle,
-                                                                yver= -1*math.cos(self.currAngle)*self.currVelocity)
+                                                                yver= -1*math.cos(self.currAngle)*self.currVelocity,
+                                                                omega=self.currRotationVelocity)
 
-            # frame = np.zeros((512,512,3),"uint8")
-            # frame = cv2.ellipse(frame,(256,256),(20,20),0,0,360,(0,255,0),-1)
-            # for i in range(1,5):
-            #     idx = int(currentState[i])*30 + 30
-            #     frame = cv2.ellipse(frame,(256,256),(idx,idx),0,180 + i*45-45,180 + i*45,(256,256,128),2)
-            # idx = int(currentState[0])*30 + 30
-            # frame = cv2.ellipse(frame,(256,256),(idx,idx),0,0,180,(256,256,128),2)
-
-            # idx = int(currentState[5])
-            # if idx == 3:
-            #     idx = 4
-            # elif idx == 4:
-            #     idx = 3
-            # idx = 4-idx
-            # frame = cv2.rectangle(frame,(idx*102,480),(idx*102 + 102,512),(100,255,200),-1)
-
-            # idx = int(currentState[6])
-            # if idx == 0:
-            #     frame = cv2.ellipse(frame,(256,256),(100,100),0,0,180,(256,0,64),2)
-            #     pass
-            # else:
-            #     frame = cv2.ellipse(frame,(256,256),(100,100),0,180 + idx*60-60,180 + idx*60,(256,0,64),2)
-            
-            # cv2.putText(frame,currentState[7],(240,260), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,256),1,cv2.LINE_AA)
-
-            # cv2.imshow("robot view",frame)
-
-
-            # if (action != -1):
-            #     print(currentState, " -> ",action)
-            # cv2.waitKey(5)
 
         elif (self.mode == MODE_PLAY.RL_TRAIN):
 
             if RLParam.ACTIONS[actionIndex] == PlayerParam.INC_ROTATION_VELO:
-                self.currRotationVelocity += PlayerParam.ACCELERATION_ROTATE
+                # self.currRotationVelocity = min(self.currRotationVelocity + PlayerParam.ACCELERATION_ROTATE, PlayerParam.MAX_ROTATION_VELOCITY)
+                self.currAngle += PlayerParam.ACCELERATION_ROTATE
 
             if RLParam.ACTIONS[actionIndex] == PlayerParam.DESC_ROTATION_VELO:
-                self.currRotationVelocity -= PlayerParam.ACCELERATION_ROTATE
+                self.currAngle -= PlayerParam.ACCELERATION_ROTATE
 
             if RLParam.ACTIONS[actionIndex] == PlayerParam.INC_FORWARD_VELO:
-                self.currVelocity = min(
-                    self.currVelocity + PlayerParam.ACCELERATION_FORWARD, self.maxVelocity)
+                self.yPos += math.cos(self.currAngle) * PlayerParam.ACCELERATION_FORWARD * GameSettingParam.dt
+                self.xPos += -math.sin(self.currAngle) * PlayerParam.ACCELERATION_FORWARD * GameSettingParam.dt
 
             if RLParam.ACTIONS[actionIndex] == PlayerParam.DESC_FORWARD_VELO:
-                self.currVelocity = max(
-                    self.currVelocity - PlayerParam.ACCELERATION_FORWARD, -self.maxVelocity)
+                self.yPos -= math.cos(self.currAngle) * PlayerParam.ACCELERATION_FORWARD * GameSettingParam.dt
+                self.xPos -= -math.sin(self.currAngle) * PlayerParam.ACCELERATION_FORWARD * GameSettingParam.dt
         elif (self.mode == MODE_PLAY.DEPLOY):
             currentState = RLAlgorithm.hashFromDistanceToState(signalPerAreaData=RLAlgorithm.convertRayCastingDataToSignalPerArea(rayCastingData=self.rayCastingLists),
                                                                leftSideDistance=abs(
                                                                    self.xPos),
                                                                rightSideDistance=abs(self.xPos - GameSettingParam.WIDTH),
                                                                angle=self.currAngle,
-                                                                yver= -1*math.cos(self.currAngle)*self.currVelocity)
+                                                                yver= -1*math.cos(self.currAngle)*self.currVelocity,
+                                                                omega=self.currRotationVelocity)
             # print(currentState)
 
             decidedAction = np.argmax(self.deployedQTabled[currentState])
@@ -159,10 +131,6 @@ class Player():
 
             if RLParam.ACTIONS[decidedAction] == PlayerParam.INC_ROTATION_VELO:
                 self.currRotationVelocity += PlayerParam.ACCELERATION_ROTATE
-
-            if RLParam.ACTIONS[decidedAction] == PlayerParam.STOP:
-                self.currVelocity = 0
-                self.currRotationVelocity = 0
 
             if RLParam.ACTIONS[decidedAction] == PlayerParam.INC_FORWARD_VELO:
                 self.currVelocity = min(
@@ -255,7 +223,17 @@ class Player():
         self._playerInput(actionIndex=actionIndex)
         self._rayCasting()
         # self.checkCollision()
-        self._move()
+        # nextState = RLAlgorithm.hashFromDistanceToState(
+        #     signalPerAreaData=RLAlgorithm.convertRayCastingDataToSignalPerArea(rayCastingData=self.rayCastingLists), 
+        #     leftSideDistance=abs(self.xPos), 
+        #     rightSideDistance=abs(self.xPos - GameSettingParam.WIDTH),
+        #     angle=self.currAngle,
+        #     yver= -1*math.cos(self.currAngle)*self.currVelocity,
+        #     omega=self.currRotationVelocity
+        # )
+        # print(nextState[-3])
+        
+        # self._move()
         
 
         if GameSettingParam.DRAW:
@@ -274,11 +252,10 @@ class Obstacle(Player):
         super().__init__(maxVelocity=PlayerParam.MAX_VELOCITY,
                          maxRotationVelocity=PlayerParam.MAX_ROTATION_VELOCITY)
 
-        self.xPos = random.randint(int(0.3*GameSettingParam.WIDTH), int(
-            0.7*GameSettingParam.WIDTH))
+        self.xPos = random.randint(int(0.1*GameSettingParam.WIDTH), int(
+            0.9*GameSettingParam.WIDTH))
 
-        self.yPos = ObstacleParam.INITIAL_OBSTACLE_Y + random.randint(0, int(
-            0.6*GameSettingParam.HEIGHT))
+        self.yPos = random.randint(0, int( GameSettingParam.HEIGHT-100))
 
         # self.xPos = 190
         # self.yPos = 300
@@ -319,8 +296,8 @@ class Obstacle(Player):
 
     def draw(self):
         global GLOBAL_SCREEN
-        self._playerInput()
-        self._move()
+        # self._playerInput()
+        # self._move()
 
         if GameSettingParam.DRAW:
             # draw player on 2D board
@@ -344,11 +321,9 @@ class Environment:
         self.xPos, self.yPos = currentPlayer.xPos, currentPlayer.yPos
 
         currentPlayer.mode = MODE_PLAY.RL_TRAIN
-        currentPlayer.displayGUI = GUI.DISPLAY
 
         for obstacle in currentObstacles:
             obstacle.mode = MODE_PLAY.RL_TRAIN
-            obstacle.displayGUI = GUI.DISPLAY
             
     def _isDoneEpisode(self):
 
@@ -359,6 +334,8 @@ class Environment:
             dead = True
         if self.currPlayer.checkCollision():
             dead = True
+        if (180-abs(math.degrees(self.currPlayer.currAngle)%360 - 180)) < 90:
+            dead = True
         return dead
 
     def _selfUpdated(self):
@@ -368,27 +345,25 @@ class Environment:
         # print("(x,y): ", int(self.currPlayer.xPos),int(self.currPlayer.yPos),end="")
 
     def updateStateByAction(self, actionIndex):
-        for obstacle in obstacles:
-            obstacle.draw()
+        # for obstacle in obstacles:
+        #     obstacle.draw()
             
         self.currPlayer.draw(actionIndex=actionIndex)    
 
         self._selfUpdated()
 
         
-
-        
-        
         nextState = RLAlgorithm.hashFromDistanceToState(
             signalPerAreaData=RLAlgorithm.convertRayCastingDataToSignalPerArea(rayCastingData=self.rayCastingData), 
             leftSideDistance=abs(self.xPos), 
             rightSideDistance=abs(self.xPos - GameSettingParam.WIDTH),
             angle=self.currPlayer.currAngle,
-            yver= -1*math.cos(self.currPlayer.currAngle)*self.currPlayer.currVelocity)
+            yver= -1*math.cos(self.currPlayer.currAngle)*self.currPlayer.currVelocity,
+            omega=self.currPlayer.currRotationVelocity)
 
         
         reward = RLAlgorithm.getReward(
-            currState=nextState, currActionIndex=actionIndex,currPlayer = self.currPlayer)
+            currState=nextState,currPlayer = self.currPlayer, obj = obstacles, action = actionIndex)
 
         
         done = self._isDoneEpisode()
@@ -400,7 +375,8 @@ class Environment:
                                                    leftSideDistance=abs(self.xPos),
                                                    rightSideDistance=abs(self.xPos - GameSettingParam.WIDTH),
                                                    angle=self.currPlayer.currAngle,
-                                                   yver= -1*math.cos(self.currPlayer.currAngle)*self.currPlayer.currVelocity)
+                                                   yver= -1*math.cos(self.currPlayer.currAngle)*self.currPlayer.currVelocity,
+                                                   omega=self.currPlayer.currRotationVelocity)
 
     def reset(self, newObj = False):
         # self.currPlayer = None
@@ -411,11 +387,9 @@ class Environment:
         #     self.currObstacles.append(Obstacle())
         
         # self.currentPlayer.mode = MODE_PLAY.RL_TRAIN
-        # self.currentPlayer.displayGUI = GUI.DISPLAY
 
         # for obstacle in self.currentObstacles:
         #     obstacle.mode = MODE_PLAY.RL_TRAIN
-        #     obstacle.displayGUI = GUI.DISPLAY
             
         # self.currPlayer.draw(actionIndex=2)
         # for obstacle in self.currObstacles:
@@ -454,6 +428,7 @@ for _ in range(ObstacleParam.NUMBER_OF_OBSTACLES):
 def startGame(mode=MODE_PLAY.MANUAL):
     player.mode = mode
     if (mode == MODE_PLAY.MANUAL):
+        GameSettingParam.DRAW = True
         while True:
             GLOBAL_CLOCK.tick(GameSettingParam.FPS)
             GLOBAL_SCREEN.fill(CustomColor.BLACK)
@@ -474,15 +449,20 @@ def startGame(mode=MODE_PLAY.MANUAL):
         # GLOBAL_CLOCK.tick(GameSettingParam.FPS)
         # GLOBAL_SCREEN.fill(CustomColor.BLACK)
         # GLOBAL_SCREEN.blit(GLOBAL_SCREEN, (0, 0))
+        GameSettingParam.DRAW = False
         
         env = Environment(currentPlayer=player, currentObstacles=obstacles)
         RL = RLAlgorithm(rayCastingData=env.rayCastingData,
                          actions=RLParam.ACTIONS)
+
+
         
         RL.train(env)
     elif (mode == MODE_PLAY.DEPLOY):
+        GameSettingParam.DRAW = True
         player.mode = MODE_PLAY.DEPLOY
         player.loadQTable()
+        print("Load Q table Done.")
         while True:
             GLOBAL_CLOCK.tick(GameSettingParam.FPS)
             GLOBAL_SCREEN.fill(CustomColor.BLACK)
@@ -494,10 +474,17 @@ def startGame(mode=MODE_PLAY.MANUAL):
                     exit()
 
             player.draw(actionIndex=None)
+
+
+
             for obstacle in obstacles:
                 obstacle.draw()
 
             pygame.display.flip()
+
+if GameSettingParam.LOCK_QTable:
+    print("Warning: Q table is locked !!!")
+    cv2.waitKey(1000)
 
 
 startGame(mode=MODE_PLAY.RL_TRAIN)
