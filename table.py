@@ -10,12 +10,9 @@ import cv2
 
 class RLAlgorithm:
     def __init__(self, rayCastingData, actions) -> None:
-        self.signalPerAreaData = self.convertRayCastingDataToSignalPerArea(
-            rayCastingData=rayCastingData)
         file = open("curQtable.txt", "r")
         RLInFile = file.read()
         if not RLInFile:
-            # self.Q = self._initQTable(actions=actions) 
             print("bruh ???")
         else:
             self.Q = json.loads(RLInFile)
@@ -26,10 +23,10 @@ class RLAlgorithm:
 
     def _initQTable(self, actions):
         rs = dict()
-        numbersOfLevelRayCasting = len(RLParam.DISTANCE_OF_RAY_CASTING)
+        numbersOfLevelRayCasting = 2
         listLevelOfRayCasting = list(range(numbersOfLevelRayCasting))        
 
-        encodedAction = [0] * (len(self.signalPerAreaData))
+        encodedAction = [0] * RLParam.AREA_RAY_CASTING_NUMBERS
         sizeEncodedAction = len(encodedAction)
 
         for i in range(pow(numbersOfLevelRayCasting, sizeEncodedAction)):
@@ -55,21 +52,22 @@ class RLAlgorithm:
 
         return tmpTable
 
-    @staticmethod
-    def convertRayCastingDataToSignalPerArea(rayCastingData):
-        numRayEachArea = int(len(rayCastingData)/RLParam.AREA_RAY_CASTING_NUMBERS)
-        rawSignal = [0]*RLParam.AREA_RAY_CASTING_NUMBERS
-        signal = [0]*RLParam.AREA_RAY_CASTING_NUMBERS
+    # @staticmethod
+    # def convertRayCastingDataToSignalPerArea(rayCastingData):
+    #     pass
+    #     numRayEachArea = int(len(rayCastingData)/RLParam.AREA_RAY_CASTING_NUMBERS)
+    #     rawSignal = [0]*RLParam.AREA_RAY_CASTING_NUMBERS
+    #     signal = [0]*RLParam.AREA_RAY_CASTING_NUMBERS
 
-        for i in range(RLParam.AREA_RAY_CASTING_NUMBERS):
-            rawSignal[i] = min(rayCastingData[numRayEachArea*i:numRayEachArea*(i+1)])
+    #     for i in range(RLParam.AREA_RAY_CASTING_NUMBERS):
+    #         rawSignal[i] = min(rayCastingData[numRayEachArea*i:numRayEachArea*(i+1)])
 
         
-        for i in range(RLParam.AREA_RAY_CASTING_NUMBERS):
-            for j in range(len(RLParam.DISTANCE_OF_RAY_CASTING)-1,-1,-1):
-                if (rawSignal[i] <= RLParam.DISTANCE_OF_RAY_CASTING[j]):
-                    signal[i] = j
-        return signal
+    #     for i in range(RLParam.AREA_RAY_CASTING_NUMBERS):
+    #         for j in range(len(RLParam.DISTANCE_OF_RAY_CASTING)-1,-1,-1):
+    #             if (rawSignal[i] <= RLParam.DISTANCE_OF_RAY_CASTING[j]):
+    #                 signal[i] = j
+    #     return signal
 
 
     @staticmethod
@@ -114,6 +112,7 @@ class RLAlgorithm:
 
         # Obstacles block car
         minHeight = 10000
+        mindis = 10000
         for obstacle in obj:
             theda = math.sqrt((obstacle.xPos - currPlayer.xPos)**2+(obstacle.yPos - currPlayer.yPos)**2)
             beta = 0
@@ -125,40 +124,45 @@ class RLAlgorithm:
             tvh = (currPlayer.xPos-obstacle.xPos)*math.sin(currPlayer.currAngle) + (obstacle.yPos-currPlayer.yPos)*math.cos(currPlayer.currAngle)
             distance = Utils.distanceBetweenTwoPoints(
                 currPlayer.xPos, currPlayer.yPos, obstacle.xPos, obstacle.yPos)
-            if distance < PlayerParam.RADIUS_LIDAR*0.6 and tvh > 0:
+            if distance < PlayerParam.RADIUS_LIDAR*0.5 and tvh > 0:
+                mindis = min(distance,mindis)
                 minHeight = min(minHeight,height)
 
-        if minHeight < 15:
+        if minHeight < 30:
             if SOME_PARAM_FOR_CODE_DO.preMinHeight == -1:
                 SOME_PARAM_FOR_CODE_DO.preMinHeight = minHeight 
             else:
-                finalReward += (minHeight - SOME_PARAM_FOR_CODE_DO.preMinHeight)*10
+                finalReward += (minHeight - SOME_PARAM_FOR_CODE_DO.preMinHeight)*15
                 SOME_PARAM_FOR_CODE_DO.preMinHeight = minHeight 
 
-        if minHeight < 5 and RLParam.ACTIONS[action] == PlayerParam.INC_FORWARD_VELO:
+        if minHeight < 10 and RLParam.ACTIONS[action] == PlayerParam.INC_FORWARD_VELO:
             finalReward -= 50
+
+        # finalReward += (PlayerParam.RADIUS_LIDAR*0.6 - mindis)*0.2
 
 
         #must go if nothing ahead
-        if (stateArr[0:RLParam.AREA_RAY_CASTING_NUMBERS] == ['2']*RLParam.AREA_RAY_CASTING_NUMBERS and RLParam.ACTIONS[action] == PlayerParam.DO_NOTHING):
-            finalReward -= 200
 
-        if (int(stateArr[-2]) < 2 and RLParam.ACTIONS[action] == PlayerParam.DESC_ROTATION_VELO):            
+        if currPlayer.xPos < GameSettingParam.WIDTH/2 and RLParam.ACTIONS[action] == PlayerParam.DESC_ROTATION_VELO:            
             finalReward -= 50
-        if (int(stateArr[-2]) > 2 and RLParam.ACTIONS[action] == PlayerParam.INC_ROTATION_VELO):
+        if currPlayer.xPos > GameSettingParam.WIDTH/2 and RLParam.ACTIONS[action] == PlayerParam.INC_ROTATION_VELO:
             finalReward -= 50
 
         if RLParam.ACTIONS[action] == PlayerParam.DO_NOTHING:
-            finalReward -= 20
+            finalReward -= 200
         if RLParam.ACTIONS[action] == PlayerParam.DESC_FORWARD_VELO:
-            finalReward -= 10
+            finalReward -= 100
+
+        if RLParam.ACTIONS[action] == PlayerParam.INC_ROTATION_VELO or RLParam.ACTIONS[action] == PlayerParam.DESC_ROTATION_VELO:
+            finalReward -= 50
 
         # Car out of lane
 
         if currPlayer.xPos > GameSettingParam.WIDTH/2:
-            finalReward -= currPlayer.xPos - SOME_PARAM_FOR_CODE_DO.preX
+            finalReward -= (currPlayer.xPos - SOME_PARAM_FOR_CODE_DO.preX)*10
         else:
-            finalReward += currPlayer.xPos - SOME_PARAM_FOR_CODE_DO.preX
+            finalReward +=( currPlayer.xPos - SOME_PARAM_FOR_CODE_DO.preX)*10
+        finalReward -= 10
 
         SOME_PARAM_FOR_CODE_DO.preX = currPlayer.xPos
 
@@ -171,7 +175,7 @@ class RLAlgorithm:
 
 
         if (180-abs(math.degrees(currPlayer.currAngle)%360 - 180)) > 90:
-            finalReward +=( (180-abs(math.degrees(currPlayer.currAngle)%360 - 180))/5-18)*2
+            finalReward +=( (180-abs(math.degrees(currPlayer.currAngle)%360 - 180))/5-18)*3
         else:
             finalReward += RLParam.GO_FUCKING_DEAD
 
@@ -303,14 +307,14 @@ class RLAlgorithm:
 
             if (e%5000 == 0 and e!=0 and GameSettingParam.LOCK_QTable == False):
                 print(e," Epoch done.")
-                file = open("D:/RL/curQtable.txt", "w")
+                file = open("curQtable.txt", "w")
                 file.write(json.dumps(self.Q))
                 file.close()
 
             #     print("Done")
             RLParam.EPSILON -= 0.0001
-            if RLParam.EPSILON < 0.01:
-                RLParam.EPSILON = 0.01
+            if RLParam.EPSILON < 0.001:
+                RLParam.EPSILON = 0.001
             numTryOnThisMap += 1
             if env.yPos < 0:
                 numPassOnThisMap += 1
@@ -321,23 +325,22 @@ class RLAlgorithm:
                 progressFile.write(comment)
                 
                 # passIn = actionCount
-            if numPassOnThisMap >= 300:
+            if numPassOnThisMap >= 100:
                 comment = f"map {mapCounter} pass in {numTryOnThisMap} trys, avg time is {(time.time() - startTime)/(e+1)} ---------------------- "
                 print(comment)
-                ObstacleParam.NUMBER_OF_OBSTACLES += 1
                 RLParam.EPSILON = min(0.01,0.5 - mapCounter*0.01)
                 progressFile.write(comment)
                 numPassOnThisMap = 0
                 numTryOnThisMap = 0
                 prePass = 0
                 mapCounter += 1
+                file = open("21-11/table-map-"+str(mapCounter)+".txt", "w")
+                file.write(json.dumps(self.Q))
+                file.close()
                 env = env.reset(True)
             else:
                 env = env.reset(False)
             # env = env.reset(False)
-
-
-            
 
             if cv2.waitKey(1) == 27:
                 break
@@ -347,7 +350,7 @@ class RLAlgorithm:
 
         outputVideo.release()
         if GameSettingParam.LOCK_QTable == False:
-            file = open("D:/RL/curQtable.txt", "w")
+            file = open("curQtable.txt", "w")
             file.write(json.dumps(self.Q))
             file.close()
 

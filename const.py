@@ -5,7 +5,7 @@ import numpy as np
 class GameSettingParam:
     CAPTION = "Reinforcement Learning"
     WIDTH = 400
-    HEIGHT = 750
+    HEIGHT = 1500
     # HEIGHT = 1800
     FPS = 10
     
@@ -24,15 +24,15 @@ class PlayerParam:
     HEIGHT = 30
 
     INITIAL_X = GameSettingParam.WIDTH//2
-    INITIAL_Y = GameSettingParam.HEIGHT - 50
+    INITIAL_Y = GameSettingParam.HEIGHT - 20
 
     MAX_VELOCITY = 50
     MAX_ROTATION_VELOCITY = 2
 
     FOV = math.pi
     HALF_FOV = FOV/2
-    CASTED_RAYS = 30
-    STEP_ANGLE = FOV / CASTED_RAYS
+    # CASTED_RAYS = 30
+    # STEP_ANGLE = FOV / CASTED_RAYS
     RADIUS_LIDAR = 180
 
     INC_ROTATION_VELO = "INC_ROTATION_VELO"
@@ -45,7 +45,7 @@ class PlayerParam:
 
 
 class ObstacleParam:
-    NUMBER_OF_OBSTACLES = 3
+    NUMBER_OF_OBSTACLES = 15
     OBSTACLE_ACCELERATION_FORWARD = 0
     OBSTACLE_ACCELERATION_ROTATE = 0
     INITIAL_OBSTACLE_X = GameSettingParam.WIDTH//2
@@ -66,10 +66,10 @@ class RLParam:
 
     GAMMA = 0.8
 
-    AREA_RAY_CASTING_NUMBERS = 5
+    AREA_RAY_CASTING_NUMBERS = 8
 
     N_EPISODES = 10000
-    MAX_EPISODE_STEPS = 1001
+    MAX_EPISODE_STEPS = 801
 
     GO_FUCKING_DEAD = -1000000
 
@@ -89,11 +89,6 @@ class RLParam:
                PlayerParam.DESC_FORWARD_VELO,
                PlayerParam.DO_NOTHING]
 
-    DISTANCE_OF_RAY_CASTING = [
-        int(PlayerParam.RADIUS_LIDAR*0.6), 
-        PlayerParam.RADIUS_LIDAR, 
-        PlayerParam.INFINITY
-    ]
     MAX_TIME_MS = 2*60
     
     class LEVEL_OF_RAY_CASTING:
@@ -170,3 +165,4 @@ class SOME_PARAM_FOR_CODE_DO:
     preMinHeight = 0
     preX = 0
     preY = 0
+    stateList = []
