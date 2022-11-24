@@ -8,10 +8,12 @@ class GameSettingParam:
     HEIGHT = 1500
     # HEIGHT = 1800
     FPS = 10
+    roadWidth = 150
     
     DRAW = False
     LOCK_QTable = False
     dt = float(1/FPS)
+    startAtBegining = True
 
 
 class PlayerParam:
@@ -33,7 +35,7 @@ class PlayerParam:
     HALF_FOV = FOV/2
     # CASTED_RAYS = 30
     # STEP_ANGLE = FOV / CASTED_RAYS
-    RADIUS_LIDAR = 180
+    RADIUS_LIDAR = 120
 
     INC_ROTATION_VELO = "INC_ROTATION_VELO"
     DESC_ROTATION_VELO = "DESC_ROTATION_VELO"
@@ -45,7 +47,7 @@ class PlayerParam:
 
 
 class ObstacleParam:
-    NUMBER_OF_OBSTACLES = 15
+    NUMBER_OF_OBSTACLES = 20
     OBSTACLE_ACCELERATION_FORWARD = 0
     OBSTACLE_ACCELERATION_ROTATE = 0
     INITIAL_OBSTACLE_X = GameSettingParam.WIDTH//2
@@ -66,10 +68,10 @@ class RLParam:
 
     GAMMA = 0.8
 
-    AREA_RAY_CASTING_NUMBERS = 8
+    AREA_RAY_CASTING_NUMBERS = 3
 
     N_EPISODES = 10000
-    MAX_EPISODE_STEPS = 801
+    MAX_EPISODE_STEPS = 501
 
     GO_FUCKING_DEAD = -1000000
 
@@ -86,8 +88,7 @@ class RLParam:
     ACTIONS = [PlayerParam.INC_FORWARD_VELO,
                PlayerParam.INC_ROTATION_VELO,
                PlayerParam.DESC_ROTATION_VELO,
-               PlayerParam.DESC_FORWARD_VELO,
-               PlayerParam.DO_NOTHING]
+               PlayerParam.DESC_FORWARD_VELO]
 
     MAX_TIME_MS = 2*60
     
@@ -129,7 +130,7 @@ class RLParam:
     
     class LEVEL_OF_LANE:
         
-        LIST_LEVEL_OF_LANE = np.array(range(20),dtype="str")
+        LIST_LEVEL_OF_LANE = np.array(range(10),dtype="str")
         
     class SCORE:
         # lidar detect obstacle
@@ -159,6 +160,7 @@ class MODE_PLAY:
     MANUAL = "MANUAL"
     RL_TRAIN = "RL_TRAIN"
     DEPLOY = "fuck this RL"
+    STUPID_RL = "I code this fuck my self"
 
 class SOME_PARAM_FOR_CODE_DO:
     passRayCasting = [0]*45

@@ -10,15 +10,15 @@ import cv2
 
 class RLAlgorithm:
     def __init__(self, rayCastingData, actions) -> None:
-        file = open("curQtable.txt", "r")
-        RLInFile = file.read()
-        if not RLInFile:
-            print("bruh ???")
-        else:
-            self.Q = json.loads(RLInFile)
-            print("Load completed")
+        # file = open("curQtable.txt", "r")
+        # RLInFile = file.read()
+        # if not RLInFile:
+        #     print("bruh ???")
+        # else:
+        #     self.Q = json.loads(RLInFile)
+        #     print("Load completed")
 
-        # self.Q = self._initQTable(actions=actions) 
+        self.Q = self._initQTable(actions=actions) 
         self.actions = actions
 
     def _initQTable(self, actions):
@@ -78,7 +78,7 @@ class RLAlgorithm:
 
         
         hashFromCenterOfLane = ""
-        leftSideDistance = np.clip(int(leftSideDistance*20/GameSettingParam.WIDTH),0,19)
+        leftSideDistance = np.clip(int((leftSideDistance - (GameSettingParam.WIDTH - GameSettingParam.roadWidth)/2)*10/GameSettingParam.roadWidth),0,9)
         hashFromCenterOfLane = str(leftSideDistance)
         hashFromAngle = ""
         angle = math.degrees(angle%(math.pi*2))
@@ -108,37 +108,42 @@ class RLAlgorithm:
     def getReward(currState, currPlayer, obj, action):
         
         finalReward = 0
-        stateArr = [char for char in currState]
 
         # Obstacles block car
-        minHeight = 10000
-        mindis = 10000
-        for obstacle in obj:
-            theda = math.sqrt((obstacle.xPos - currPlayer.xPos)**2+(obstacle.yPos - currPlayer.yPos)**2)
-            beta = 0
-            if obstacle.xPos - currPlayer.xPos < 0:
-                beta = math.acos((obstacle.yPos - currPlayer.yPos)/theda) - currPlayer.currAngle
-            else:
-                beta = math.acos((obstacle.yPos - currPlayer.yPos)/theda) + currPlayer.currAngle
-            height = abs(theda*math.sin(beta))
-            tvh = (currPlayer.xPos-obstacle.xPos)*math.sin(currPlayer.currAngle) + (obstacle.yPos-currPlayer.yPos)*math.cos(currPlayer.currAngle)
-            distance = Utils.distanceBetweenTwoPoints(
-                currPlayer.xPos, currPlayer.yPos, obstacle.xPos, obstacle.yPos)
-            if distance < PlayerParam.RADIUS_LIDAR*0.5 and tvh > 0:
-                mindis = min(distance,mindis)
-                minHeight = min(minHeight,height)
+        # minHeight = 10000
+        # mindis = 10000
+        # for obstacle in obj:
+        #     theda = math.sqrt((obstacle.xPos - currPlayer.xPos)**2+(obstacle.yPos - currPlayer.yPos)**2)
+        #     beta = 0
+        #     if obstacle.xPos - currPlayer.xPos < 0:
+        #         beta = math.acos((obstacle.yPos - currPlayer.yPos)/theda) - currPlayer.currAngle
+        #     else:
+        #         beta = math.acos((obstacle.yPos - currPlayer.yPos)/theda) + currPlayer.currAngle
+        #     height = abs(theda*math.sin(beta))
+        #     tvh = (currPlayer.xPos-obstacle.xPos)*math.sin(currPlayer.currAngle) + (obstacle.yPos-currPlayer.yPos)*math.cos(currPlayer.currAngle)
+        #     distance = Utils.distanceBetweenTwoPoints(
+        #         currPlayer.xPos, currPlayer.yPos, obstacle.xPos, obstacle.yPos)
+        #     if distance < PlayerParam.RADIUS_LIDAR*0.5 and tvh > 0:
+        #         mindis = min(distance,mindis)
+        #         minHeight = min(minHeight,height)
 
-        if minHeight < 30:
-            if SOME_PARAM_FOR_CODE_DO.preMinHeight == -1:
-                SOME_PARAM_FOR_CODE_DO.preMinHeight = minHeight 
-            else:
-                finalReward += (minHeight - SOME_PARAM_FOR_CODE_DO.preMinHeight)*15
-                SOME_PARAM_FOR_CODE_DO.preMinHeight = minHeight 
+        # if minHeight < 30:
+        #     if SOME_PARAM_FOR_CODE_DO.preMinHeight == -1:
+        #         SOME_PARAM_FOR_CODE_DO.preMinHeight = minHeight 
+        #     else:
+        #         finalReward += (minHeight - SOME_PARAM_FOR_CODE_DO.preMinHeight)*15
+        #         SOME_PARAM_FOR_CODE_DO.preMinHeight = minHeight 
 
-        if minHeight < 10 and RLParam.ACTIONS[action] == PlayerParam.INC_FORWARD_VELO:
-            finalReward -= 50
+        # if minHeight < 10 and RLParam.ACTIONS[action] == PlayerParam.INC_FORWARD_VELO:
+        #     finalReward -= 50
+
+        if currState[1] == '1':
+            finalReward -= 200
 
         # finalReward += (PlayerParam.RADIUS_LIDAR*0.6 - mindis)*0.2
+
+        if currState[-2] == '0' or currState[-2] == '9':
+            finalReward -= 10000
 
 
         #must go if nothing ahead
@@ -157,12 +162,16 @@ class RLAlgorithm:
             finalReward -= 50
 
         # Car out of lane
-
+        tmp = 10
+        if max(currState[0:RLParam.AREA_RAY_CASTING_NUMBERS]) == '0':
+            tmp = 50
         if currPlayer.xPos > GameSettingParam.WIDTH/2:
-            finalReward -= (currPlayer.xPos - SOME_PARAM_FOR_CODE_DO.preX)*10
+            finalReward -= (currPlayer.xPos - SOME_PARAM_FOR_CODE_DO.preX)*tmp
         else:
-            finalReward +=( currPlayer.xPos - SOME_PARAM_FOR_CODE_DO.preX)*10
-        finalReward -= 10
+            finalReward +=( currPlayer.xPos - SOME_PARAM_FOR_CODE_DO.preX)*tmp
+
+        if  min(currState[0:RLParam.AREA_RAY_CASTING_NUMBERS]) == '1' and RLParam.ACTIONS[action] == PlayerParam.DESC_FORWARD_VELO:
+            finalReward += 500
 
         SOME_PARAM_FOR_CODE_DO.preX = currPlayer.xPos
 
@@ -187,6 +196,8 @@ class RLAlgorithm:
 
         if currPlayer.yPos > GameSettingParam.HEIGHT:
             finalReward += RLParam.GO_FUCKING_DEAD
+
+        finalReward += 100
             
         return finalReward
 
@@ -266,10 +277,10 @@ class RLAlgorithm:
                              np.max(self.Q[nextState]))
                 state = nextState
 
-                if e%20 == 0 and actionCount%10 == 0:
+                if e%50 == 0 and actionCount%10 == 0:
                     curPoint = (int(env.xPos),int(env.yPos))
                     drawColor = (255,0,255)
-                    if (int(actionCount/100)%2 == 0):
+                    if (int(actionCount/50)%2 == 0):
                         drawColor = (0,255,0)
 
                     curEpochMap = cv2.line(curEpochMap,curPoint,startPoint,drawColor,2)
@@ -285,13 +296,12 @@ class RLAlgorithm:
                 if done: 
                     # totalReward -=  (actionCount + 1) * 0.01 # 120s * 1 = 120
                     break
-            if e%20 == 0:
-                cv2.addWeighted(visualMap,0.5,curEpochMap,1,0.0,visualMap)
-                visualMapWText = visualMap.copy()
+            if e%50 == 0:
+                visualMapWText = curEpochMap.copy()
                 visualMapWText = cv2.putText(visualMapWText,str(int(totalReward)),(20,GameSettingParam.HEIGHT - 50),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 visualMapWText = cv2.putText(visualMapWText,str(e),(20,20),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 visualMapWText = cv2.putText(visualMapWText,str(actionCount),(20,40),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
-                visualMapWText = cv2.putText(visualMapWText,str(passIn),(20,60),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
+                visualMapWText = cv2.putText(visualMapWText,str(numTryOnThisMap),(20,60),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 visualMapWText = cv2.putText(visualMapWText,str(numPassOnThisMap),(300,40),cv2.FONT_HERSHEY_SIMPLEX,0.8,(199,141,255),1,cv2.LINE_AA)
                 cv2.imshow("Last Path",visualMapWText)
                 outputVideo.write(visualMapWText)
@@ -319,14 +329,14 @@ class RLAlgorithm:
             if env.yPos < 0:
                 numPassOnThisMap += 1
                 
-                comment = f"map {mapCounter} pass {numPassOnThisMap} times on {numTryOnThisMap - prePass} trys, avg time is {(time.time() - startTime)/(e+1)}"
-                print(comment)
+                # comment = f"map {mapCounter} pass {numPassOnThisMap} times on {numTryOnThisMap - prePass} trys, avg time is {(time.time() - startTime)/(e+1)}"
+                # print(comment)
                 prePass = numTryOnThisMap
-                progressFile.write(comment)
+                # progressFile.write(comment)
                 
                 # passIn = actionCount
-            if numPassOnThisMap >= 100:
-                comment = f"map {mapCounter} pass in {numTryOnThisMap} trys, avg time is {(time.time() - startTime)/(e+1)} ---------------------- "
+            if numPassOnThisMap >= 20 or numTryOnThisMap >= 500:
+                comment = f"map {mapCounter} pass in {numTryOnThisMap} trys, avg time is {(time.time() - startTime)/(e+1)} "
                 print(comment)
                 RLParam.EPSILON = min(0.01,0.5 - mapCounter*0.01)
                 progressFile.write(comment)
@@ -334,7 +344,7 @@ class RLAlgorithm:
                 numTryOnThisMap = 0
                 prePass = 0
                 mapCounter += 1
-                file = open("21-11/table-map-"+str(mapCounter)+".txt", "w")
+                file = open("24-11/table-map-"+str(mapCounter)+".txt", "w")
                 file.write(json.dumps(self.Q))
                 file.close()
                 env = env.reset(True)
