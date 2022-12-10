@@ -5,7 +5,11 @@ import numpy as np
 class GameSettingParam:
     CAPTION = "Reinforcement Learning"
     WIDTH = 400
+<<<<<<< Updated upstream
     HEIGHT = 750
+=======
+    HEIGHT = 1000
+>>>>>>> Stashed changes
     # HEIGHT = 1800
     FPS = 10
     
@@ -45,7 +49,11 @@ class PlayerParam:
 
 
 class ObstacleParam:
+<<<<<<< Updated upstream
     NUMBER_OF_OBSTACLES = 3
+=======
+    NUMBER_OF_OBSTACLES = 10
+>>>>>>> Stashed changes
     OBSTACLE_ACCELERATION_FORWARD = 0
     OBSTACLE_ACCELERATION_ROTATE = 0
     INITIAL_OBSTACLE_X = GameSettingParam.WIDTH//2
